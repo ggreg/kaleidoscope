@@ -28,9 +28,17 @@ The following engineering practices are part of Kaleidoscope++:
 As an project, it's not perfect and any suggestions and modifications to
 improve it are warmly welcome. Fork it, hack it, share it!
 
+## Requirements
+
+- C++ compiler (clang or g++)
+- gyp
+- ninja
+- googletest
+- mkdocs
+
 ## Quick Start
 
-The project provides the following commands:
+The project provides the following commands (use `./help` to discover them):
 
 - check: the source code with static analysis.
 - ctags: build ctags.
@@ -41,8 +49,34 @@ The project provides the following commands:
 
 ## Tutorial
 
-Please find the tutorial in the `doc/tutorial/` directory in the form of one
-markdown file per chapter.
+Please find the tutorial in the `docs/` directory in the form of one
+markdown file per chapter. It uses the [mkdocs](http://www.mkdocs.org/) tool
+to generate a static site of the documentation.
+
+Refer to the [mkdocs](http://www.mkdocs.org/) site for further details.
+
+To install it:
+
+```
+$ pip install mkdocs
+```
+
+To start the built-in webserver and browse the tutorial, type:
+
+```
+$ mkdocs serve
+```
+
+Then open up http://127.0.0.1:8000/ in your browser.
+
+If you want to generate the static site, type:
+
+```
+$ mkdocs build
+```
+
+It will create a new directory, named `site/` and put HTML and static files
+inside.
 
 ## Acknowledgements
 
