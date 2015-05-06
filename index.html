@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="./img/favicon.ico">
+
+	<title>Kaleidoscope++: LLVM Tutorial Reloaded</title>
+
+        <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="./css/highlight.css">
+        <link href="./css/base.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href=".">Kaleidoscope++: LLVM Tutorial Reloaded</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li class="active">
+                    <a href=".">Home</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="about/">About</a>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                
+                <li class="disabled">
+                    <a rel="next" >
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="about/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#welcome-to-kaleidoscope">Welcome to Kaleidoscope++</a></li>
+        
+            <li><a href="#introduction">Introduction</a></li>
+        
+            <li><a href="#requirements">Requirements</a></li>
+        
+            <li><a href="#the-kaleidoscope-language">The Kaleidoscope Language</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="welcome-to-kaleidoscope">Welcome to Kaleidoscope++</h1>
+<h2 id="introduction">Introduction</h2>
+<p>Welcome to this variant of the “Implementing a language with LLVM” tutorial.
+This tutorial runs through the implementation of a simple language, showing how
+fun and easy it can be. It will get you up and started as well as help to build
+a framework you can extend to other languages. The code in this tutorial can
+also be used as a playground to hack on other LLVM specific things.</p>
+<p>The goal of this tutorial is to progressively unveil our language, describing
+how it is built up over time. This will let us cover a fairly broad range of
+language design and LLVM-specific usage issues, showing and explaining the code
+for it all along the way, without overwhelming you with tons of details up
+front.</p>
+<p>This tutorial is an alternative to the official LLVM tutorial and tries to
+follow modern and sane software engineering principles that are deliberately
+missing from the original tutorial.</p>
+<h2 id="requirements">Requirements</h2>
+<p>You should have a basic understanding of C or C++, mainly static types and
+manual memory allocation. As the code will rely on some modern (C++11, C++14)
+features, we will use the Boost library, pointer ownership and move semantics.
+Though they are not the main topic of the tutorial, it is a good use case for
+these kind of features.</p>
+<h2 id="the-kaleidoscope-language">The Kaleidoscope Language</h2>
+<p>This tutorial will be illustrated with a toy language that we’ll call
+“Kaleidoscope” (derived from “meaning beautiful, form, and view”). Kaleidoscope
+is a procedural language that allows you to define functions, use conditionals,
+math, etc. Over the course of the tutorial, we’ll extend Kaleidoscope to
+support the if/then/else construct, a for loop, user defined operators, JIT
+compilation with a simple command line interface, etc...</p>
+<p>To keep things simple, we start with a single data type: a 64-bit floating type
+(aka <em>double</em> in C parlance). Hence we do not have to declare the type of a
+variable and it gives the language a taste of dynamically typed language. We
+will see how to make it evolve and support multiple types later.</p>
+<p>Kaleidoscope supports the definition of functions such as:</p>
+<pre><code class="python">def fib(x)
+  if x &lt; 3 then
+    1
+  else
+    fib(x - 1) + fib(x - 2)
+</code></pre>
+
+<p>This function is callable as:</p>
+<pre><code class="python">fib(40)
+</code></pre></div>
+        </div>
+
+        
+
+        <script src="./js/jquery-1.10.2.min.js"></script>
+        <script src="./js/bootstrap-3.0.3.min.js"></script>
+        <script src="./js/highlight.pack.js"></script>
+        <script src="./js/base.js"></script>
+    </body>
+</html>
