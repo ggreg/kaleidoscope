@@ -37,3 +37,6 @@ third-party/
 
 # ctags
 tags
+
+# Static documentation site
+site/
