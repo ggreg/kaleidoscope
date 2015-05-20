@@ -2,4 +2,5 @@
 
 set -e
 
+./build
 out/Default/tests/test
