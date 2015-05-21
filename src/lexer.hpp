@@ -33,6 +33,7 @@ class Lexer {
       last_char_{static_cast<int>(' ')} {
     }
     void SkipSpaces();
+    char GetChar();
     token::Token* GetNextToken();
 };
 

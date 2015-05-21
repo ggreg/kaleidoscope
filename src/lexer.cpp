@@ -11,10 +11,16 @@ namespace kaleidoscope {
 namespace lexer {
 
 void Lexer::SkipSpaces() {
-  while(isspace(last_char_)) {
-    last_char_ = input_->get();
+  while(isspace(GetChar())) {
   }
 }
+
+
+char Lexer::GetChar() {
+  last_char_ = input_->get();
+  return last_char_;
+}
+
 
 token::Token* Lexer::GetNextToken() {
   SkipSpaces();
