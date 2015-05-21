@@ -9,15 +9,41 @@ using namespace kaleidoscope;
 
 
 TEST(Lexer, Identifier) {
-  const std::string val = "var";
-  const auto input = new std::istringstream{val};
-  auto tok = token::TokenWithValue{
-    token::Type::kIdentifier,
-     "var",
-  };
-
+  const auto input = new std::istringstream{"var"};
   auto lexer = lexer::Lexer(input);
+
   auto next_tok = boost::get<token::TokenWithValue>(lexer.GetNextToken());
-  EXPECT_EQ(next_tok->type, tok.type);
-  EXPECT_EQ(next_tok->value, tok.value);
+
+  EXPECT_EQ(next_tok->type, token::Type::kIdentifier);
+  EXPECT_EQ(next_tok->value, token::Value("var"));
+}
+
+TEST(Lexer, NumberInt) {
+  const auto input = new std::istringstream{"42"};
+  auto lexer = lexer::Lexer{input};
+
+  auto next_tok = boost::get<token::TokenWithValue>(lexer.GetNextToken());
+
+  EXPECT_EQ(next_tok->type, token::Type::kNumber);
+  EXPECT_EQ(next_tok->value, token::Value(42.));
+}
+
+TEST(Lexer, NumberNoDecimal) {
+  const auto input = new std::istringstream{"42."};
+  auto lexer = lexer::Lexer{input};
+
+  auto next_tok = boost::get<token::TokenWithValue>(lexer.GetNextToken());
+
+  EXPECT_EQ(next_tok->type, token::Type::kNumber);
+  EXPECT_EQ(next_tok->value, token::Value(42.));
+}
+
+TEST(Lexer, NumberWithDecimal) {
+  const auto input = new std::istringstream{"42.1337"};
+  auto lexer = lexer::Lexer{input};
+
+  auto next_tok = boost::get<token::TokenWithValue>(lexer.GetNextToken());
+
+  EXPECT_EQ(next_tok->type, token::Type::kNumber);
+  EXPECT_EQ(next_tok->value, token::Value(42.1337));
 }

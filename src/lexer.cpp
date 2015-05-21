@@ -41,6 +41,25 @@ token::Token* Lexer::GetNextToken() {
         token::TokenWithValue{token::Type::kIdentifier, value}
       };
   }
+  if (isdigit(last_char_)) {
+    std::string number_str;
+    number_str += last_char_;
+
+    while (isdigit(GetChar())) {
+      number_str += last_char_;
+    }
+    if (last_char_ == '.') {
+      number_str += last_char_;
+
+      while (isdigit(GetChar())) {
+        number_str += last_char_;
+      }
+    }
+
+    return new token::Token{
+      token::TokenWithValue{token::Type::kNumber, strtod(number_str.c_str(), 0)}
+    };
+  }
 
   return nullptr;
 }
