@@ -11,7 +11,8 @@ namespace kaleidoscope {
 namespace lexer {
 
 void Lexer::SkipSpaces() {
-  while(isspace(GetChar())) {
+  while(isspace(last_char_)) {
+    GetChar();
   }
 }
 
