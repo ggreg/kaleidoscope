@@ -47,3 +47,28 @@ TEST(Lexer, NumberWithDecimal) {
   EXPECT_EQ(next_tok->type, token::Type::kNumber);
   EXPECT_EQ(next_tok->value, token::Value(42.1337));
 }
+
+TEST(Lexer, SimpleExpr) {
+  const auto input = new std::istringstream{"def f(a) a + 1"};
+
+  auto lexer = lexer::Lexer{input};
+
+  auto tok1 = boost::get<token::Type>(lexer.GetNextToken());
+  EXPECT_EQ(*tok1, token::Type::kDef);
+
+  auto tok2 = boost::get<token::TokenWithValue>(lexer.GetNextToken());
+  EXPECT_EQ(tok2->type, token::Type::kIdentifier);
+  EXPECT_EQ(tok2->value, token::Value("f"));
+
+  auto tok3 = boost::get<token::Type>(lexer.GetNextToken());
+  assert(tok3 != nullptr);
+  EXPECT_EQ(*tok3, token::Type::kLParen);
+
+  auto tok4 = boost::get<token::TokenWithValue>(lexer.GetNextToken());
+  EXPECT_EQ(tok4->type, token::Type::kIdentifier);
+  EXPECT_EQ(tok4->value, token::Value("a"));
+
+  auto tok5 = boost::get<token::Type>(lexer.GetNextToken());
+  assert(tok5 != nullptr);
+  EXPECT_EQ(*tok5, token::Type::kRParen);
+}

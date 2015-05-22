@@ -61,6 +61,14 @@ token::Token* Lexer::GetNextToken() {
       token::TokenWithValue{token::Type::kNumber, strtod(number_str.c_str(), 0)}
     };
   }
+  if (last_char_ == '(') {
+    GetChar();
+    return new token::Token(token::Type::kLParen);
+  }
+  if (last_char_ == ')') {
+    GetChar();
+    return new token::Token(token::Type::kRParen);
+  }
 
   return nullptr;
 }

@@ -6,10 +6,12 @@ namespace kaleidoscope {
 namespace token {
 
 enum struct Type {
-  kEof = -1,
-  kDef = -2,
-  kIdentifier = -3,
-  kNumber = -4, // Trailing comma authorized in C++11.
+  kEof,
+  kDef,
+  kIdentifier,
+  kNumber,
+  kLParen,
+  kRParen, // Trailing comma authorized in C++11.
 };
 
 typedef boost::variant<std::string, double> Value;
