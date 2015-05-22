@@ -30,7 +30,7 @@ token::Token* Lexer::GetNextToken() {
   if (isalpha(last_char_)) {
       std::string value;
       value += last_char_;
-      while (isalnum((last_char_ = input_->get()))) {
+      while (isalnum(GetChar())) {
         value += last_char_;
       }
 
