@@ -8,6 +8,11 @@
 
 namespace kaleidoscope {
 
+namespace token {
+  const Type Identifier::type = Type::kIdentifier;
+  const Type Number::type = Type::kNumber;
+}
+
 namespace lexer {
 
 void Lexer::SkipSpaces() {
@@ -38,9 +43,7 @@ token::Token* Lexer::GetNextToken() {
         return new token::Token{token::Type::kDef};
       }
 
-      return new token::Token{
-        token::TokenWithValue{token::Type::kIdentifier, value}
-      };
+      return new token::Identifier{value};
   }
   if (isdigit(last_char_)) {
     std::string number_str;
@@ -57,9 +60,7 @@ token::Token* Lexer::GetNextToken() {
       }
     }
 
-    return new token::Token{
-      token::TokenWithValue{token::Type::kNumber, strtod(number_str.c_str(), 0)}
-    };
+    return new token::Number{strtod(number_str.c_str(), 0)};
   }
   if (last_char_ == '(') {
     GetChar();

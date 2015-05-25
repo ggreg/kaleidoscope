@@ -1,4 +1,4 @@
-#include <boost/variant.hpp>
+#include <iostream>
 
 
 namespace kaleidoscope {
@@ -14,13 +14,26 @@ enum struct Type {
   kRParen, // Trailing comma authorized in C++11.
 };
 
-typedef boost::variant<std::string, double> Value;
-struct TokenWithValue {
+struct Token {
   Type type;
-  Value value;
+
+  Token(Type type): type{type} {};
 };
 
-typedef boost::variant<Type, TokenWithValue> Token;
+struct Identifier: Token {
+  static const Type type; // = Type::kIdentifier
+  std::string value;
+
+  Identifier(std::string value): Token{type}, value{value} {};
+};
+
+struct Number: Token {
+  static const Type type; // = Type::kNumber;
+  double value;
+
+  Number(double value): Token{type}, value{value} {};
+};
+
 }
 
 namespace lexer {
