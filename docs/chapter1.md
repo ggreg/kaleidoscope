@@ -7,12 +7,9 @@ be able to define and call functions.
 
 A function is defined by its:
 
-- Signature that contains the name of the function and its arguments.
+- Prototype that contains the name of the function and its arguments.
 - Body that describes the computation that will be applied to its arguments
   when  the function will be called.
-
-Once a function is defined, one can call it by using its name and replacing the
-name of arguments by values.
 
 For example, we define a `add` function there:
 
@@ -21,7 +18,8 @@ def add(a, b)
     a + b
 ```
 
-And we call it with:
+Once a function is defined, one can call it by using its name and replacing the
+name of arguments by values:
 
 ```python
 add(1, 2)
@@ -51,7 +49,8 @@ encounter situations such as the *call* is also `identifier ( identifier ,
 identifier )`. It would then be forced to get tokens after the `)`. Using the
 `def` keyword removes any ambiguity from the start of the definition.
 
-One more thing, the indentation is only here for readability. It is not part of the body format. We could write:
+One more thing, the indentation is only here for readability. It is not part of
+the body format. We could write:
 
 ```python
 add(a, b) a + b
@@ -61,13 +60,13 @@ add(a, b) a + b
 
 Ok, so now how can we parse that?
 
-The frontend relies on two components: the lexer and the parser. The lexer
-reads the raw text of the source code and converts it to a sequence of tokens.
-A token identifies the type of an expression, it has a type and a value. For
-example we said earlier that `add` is an identifier. So its type is
-`identifier` and its value is `add`. The parser reads the sequence of tokens
-and matches grammar rules. A grammar descripe the structure of the language. In
-other word it explains the set of valid token sequences.
+The frontend relies on two components: the *lexer* and the *parser*. The
+*lexer* reads the raw text of the source code and converts it to a sequence of
+tokens.  A token identifies the type of an expression, it has a *type* and a
+*value*. For example we said earlier that `add` is an identifier. So its type
+is `identifier` and its value is `add`. The *parser* reads the sequence of
+tokens and matches grammar rules. A grammar describes the structure of the
+language. In other word it explains the set of valid token sequences.
 
 ### Lexer
 
@@ -88,7 +87,9 @@ The original LLVM tutorial used two global variables:
 
 What's wrong with that?
 
-We cannot parse two tokens at the same time (in different threads or coroutines) but should it really happen? Parallel compilation usually relies on separate processes.
+We cannot parse two tokens at the same time (in different threads or
+coroutines) but should it really happen? Parallel compilation usually relies on
+separate processes.
 
 There is a performance issue related to global variable that would not be often
 in the cache. They are declared *static* so they are stored in the `.bss
@@ -98,30 +99,37 @@ stage, performance is not a concern.
 In our context, the main concern is *locality* and its consequence on
 understanding how and when a variable is used. Hence a global variable makes it
 harder to reason about what piece of code is using it and when. It also makes
-it more difficult to write tests. See also [GlobalVariablesAreBad](http://c2.com/cgi/wiki?GlobalVariablesAreBad) and [Are global variables bad?](http://stackoverflow.com/a/485020).
+it more difficult to write tests. See also
+[GlobalVariablesAreBad](http://c2.com/cgi/wiki?GlobalVariablesAreBad) and [Are
+global variables bad?](http://stackoverflow.com/a/485020).
 
 Another simple way to handle that is to define a struct:
 
 ```c++
-enum struct TokenType {  // enum struct is C++11.
-  eof        = -1,
-  def        = -2,
-  identifier = -3,
-  number     = -4, // Trailing comma authorized in C++11.
+namespace token {
+//...
+enum struct Type {  // enum struct is C++11.
+  kEof        = -1,
+  kDef        = -2,
+  kIdentifier = -3,
+  kNumber     = -4, // Trailing comma authorized in C++11.
 };
+//...
+}
 ```
 
 Note: an *enum struct* (or an *enum class*) is a *scoped enumeration*. It
-allows to address its value with their enum prefix (here `TokenType::`) also
+allows to access its values with their enum prefix (here `TokenType::`) also
 called *scope resolution operator. See also
 [enum](http://en.cppreference.com/w/cpp/language/enum). There is no collision between
 two scoped enumerations. For example we can have a `Enum1::A` and `Enum2::A`.
 There are no implicit conversions from the values of a scoped enumerator to
-integral types, although static_cast may be used to obtain the numeric value of
-the enumerator. It means you can convert `TokenType` to an integer with `static_cast<int>(type)`, for example:
+integral types, although `static_cast may` be used to obtain the numeric value
+of the enumerator. It means you can convert `TokenType` to an integer with
+`static_cast<int>(type)`, for example:
 
 ```c++
-cout << static_cast<int>TokenType::identifier << endl;
+cout << static_cast<int>token::Type::kIdentifier << endl;
 ```
 
 will print:
@@ -132,44 +140,38 @@ will print:
 
 ```cpp
 struct Token {
-  TokenType type;
-  TokenValue value;
+  Type type;
+  Value value;
 };
 ```
 
 There are several issues there:
 
-- *type* and *value* can mismatch, for example having a identifier with an
+- *type* and *value* can mismatch, for example having an *identifier* with an
   integer value. It would be a bug in the lexer though.
 - `TokenValue` has several subtypes like `double` and `string`.
 
-To solve the problem of mismatch between *type* and *value*, we can rely on a type hierarchy:
+To solve the problem of mismatch between *type* and *value*, we can rely on a
+type hierarchy:
 
 ```cpp
 struct Token {
-  TokenType type;
-  TokenValue value;
+  Type type;
 };
 
 struct Identifier: public Token {
-  static const TokenType type = TokenType::identifier;
-  string value;
-
-  Identifier(string value): value{value} {}
+  //...
 };
 
 struct Number: public Token {
-  static const TokenType type = TokenType::number;
-  double value;
-
-  Number(double value): value{value} {}
+  //...
 };
 ```
 
-To solve the problem of `TokenValue` that have several types, we use
-[Boost.Variant](http://www.boost.org/libs/variant). These also [*The Boost
-C++ libraries, Chapter
-24. Boost.Variant*](http://theboostcpplibraries.com/boost.variant):
+To solve the problem of `token::Value` having several types, we could use
+[Boost.Variant](http://www.boost.org/libs/variant). These also [*The Boost C++
+libraries, Chapter 24.
+Boost.Variant*](http://theboostcpplibraries.com/boost.variant):
 
 ```c++
 #include <boost/variant.hpp>
@@ -182,7 +184,7 @@ typedef boost::variant<char, string, double> TokenValue;
 Then, the following code:
 
 ```c++
-  auto tok = Identifier("def");
+  auto tok = token::Identifier("def");
   cout << tok.value << endl;
   cout << static_cast<int>(tok.type) << endl;
 ```
@@ -196,35 +198,34 @@ def
 
 Note: there is something wrong with `Token tok = Identifier("def")` where
 `tok.value` is empty (I assume it is initialized by default to the empty string
-by the compiler). [Object
-Slicing](https://en.wikipedia.org/wiki/Object_slicing)??
+by the compiler). [Object Slicing](https://en.wikipedia.org/wiki/Object_slicing)?
 
 What will happen when we will need to inspect the type of `Token` instance?
 There is a problem. The class and its `type` attribute are redundant. The class
 hierarchy does not represent the fact that some tokens are identified
 *dynamically*. This is why the token types are negative. It's to automatically
 take into account characters integer value. It means the scanning step cannot
-go through basic sanity checks. The lexer allows invalid tokens. To make it stricter we can define all the valid tokens.o
+go through basic sanity checks. The lexer allows invalid tokens. To make it
+stricter we define all valid tokens:
 
 ```c++
-class Token {
-  int type;
-  Value value;
-}
-```
+enum struct Type {
+  kEof,
+  kDef,
+  kIdentifier,
+  kNumber,
+  kLParen,
+  kRParen, // Trailing comma authorized in C++11.
+};
 
-Then we will have a factory that takes a string and returns a `Token`:
-
-```c++
-Token* mkToken(std::string str) {
-
+struct Token {
+  Type type;
 }
 ```
 
 How does it compare to a simple integer? With a naive approach we will allocate
-one new object for each token even simple one such as `(` or `)`. A bit
-advantae of an integer is that it is a native value, it does not require any
-allocation.
+one new object for each token even simple one such as `(` or `)`. An integer
+has the advantage of being a native value, it does not require any allocation.
 
 Why not using Boost.Variant again? And define:
 
@@ -241,6 +242,71 @@ It brings the best of both world:
 
 A visitor will help to define a strategy to get the value.
 
+However Boost.variant brings its set of limitations and hides some magic. [Kill
+your darlings](http://c2.com/cgi/wiki?KillYourDarlings) because in the end they
+may bring more limitations than features!
+
+Using a class hierarchy is more straightforward and usual:
+
+```c++
+enum struct Type {
+  kEof,
+  kDef,
+  kIdentifier,
+  kNumber,
+  kLParen,
+  kRParen, // Trailing comma authorized in C++11.
+};
+
+struct Token {
+  Type type;
+
+  Token(Type type): type{type} {};
+};
+
+struct Identifier: Token {
+  static const Type type; // = Type::kIdentifier
+  std::string value;
+
+  Identifier(std::string value): Token{type}, value{value} {};
+};
+
+struct Number: Token {
+  static const Type type; // = Type::kNumber;
+  double value;
+
+  Number(double value): Token{type}, value{value} {};
+};
+```
+
+And in `src/lexer.cpp`:
+
+```c++
+namespace token {
+  const Type Identifier::type = Type::kIdentifier;
+  const Type Number::type = Type::kNumber;
+}
+```
+
+The interesting part is to provide information locality. A token describes
+itself. However there is still an issue with the `enum struct`. If it was a
+simple integer `enum` or an `integer` `token::Type` could have been defined
+inline the `Identifier` and `Number` subclasses (Stroustrup, 4th, 17.4.5):
+"*for a few simple special cases, it is possible to initialize a static member
+in the class de- claration. The static member must be a const of an integral or
+enumeration type, or a constexpr of a literal type (§10.4.3), and the
+initializer must be a constant-expression.*"
+
+As it is an `enum struct` is required *special storage* and must be initialized
+once outside the class definition (Stroustrup, 4th, 17.4.5): "*If (and only if)
+you use an initialized member in a way that requires it to be stored as an
+object in memory, the member must be (uniquely) defined somewhere. The
+initializer may not be repeated*".
+
+Now it works. The only issue is that the value is not in the class definition
+which decreases information locality but is acceptable as the value is obvious
+(though we added a comment to make it explicit) and should not change.
+
 The original LLVM tutorial uses a function to get the next token from the
 input. It assumes that the input comes from *stdin* hence using the `getchar()`
 function from `cstdio` and that values are stored in global variables when
@@ -251,22 +317,24 @@ of clang? ;)
 ```c++
 #include <iostream>
 
-
 class Lexer {
-    int line_number_;
-    int char_offset_;
-    char current_char_;
-    Token last_token_;
-    std::istream input_;
+  std::istream* input_;
+  int last_char_;
 
   public:
-    Lexer(std::istream input) input_{input} {}
-    Token& GetNextToken();
-}
+    Lexer(std::istream* input):
+      input_{input},
+      last_char_{static_cast<int>(' ')} {
+    }
+    void SkipSpaces();
+    char GetChar();
+    token::Token* GetNextToken();
+};
 ```
 
 Here the private attributes encapsulate the state and we can evolve the class
 without disturbing its users. We can define what we expect in tests. The lexer
 is very simple that's why there is no issue implementing it in functions rather
-than defining regular expressions. However regular would be more expressive.
-Let's start with a simple version and see if we want to refactor it.
+than defining regular expressions. However regular would be more expressive
+(they would still be quite simple). Let's start with a simple version and see
+if we want to refactor it.
