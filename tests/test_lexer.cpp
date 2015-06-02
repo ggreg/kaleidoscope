@@ -8,44 +8,39 @@
 using namespace kaleidoscope;
 
 
+template<typename T, typename V>
+void check_token(lexer::Lexer* lexer, token::Type type, V value) {
+  auto tok = static_cast<T>(lexer->GetNextToken());
+  EXPECT_EQ(tok->type, type);
+  EXPECT_EQ(tok->value, value);
+}
+
 TEST(Lexer, Identifier) {
   const auto input = new std::istringstream{"var"};
   auto lexer = lexer::Lexer(input);
 
-  auto next_tok = static_cast<token::Identifier*>(lexer.GetNextToken());
-
-  EXPECT_EQ(next_tok->type, token::Type::kIdentifier);
-  EXPECT_EQ(next_tok->value, "var");
+  check_token<token::Identifier*, std::string>(&lexer, token::Type::kIdentifier, "var");
 }
 
 TEST(Lexer, NumberInt) {
   const auto input = new std::istringstream{"42"};
   auto lexer = lexer::Lexer{input};
 
-  auto next_tok = static_cast<token::Number*>(lexer.GetNextToken());
-
-  EXPECT_EQ(next_tok->type, token::Type::kNumber);
-  EXPECT_EQ(next_tok->value, 42.);
+  check_token<token::Number*, double>(&lexer, token::Type::kNumber, 42.);
 }
 
 TEST(Lexer, NumberNoDecimal) {
   const auto input = new std::istringstream{"42."};
   auto lexer = lexer::Lexer{input};
 
-  auto next_tok = static_cast<token::Number*>(lexer.GetNextToken());
-
-  EXPECT_EQ(next_tok->type, token::Type::kNumber);
-  EXPECT_EQ(next_tok->value, 42.);
+  check_token<token::Number*, double>(&lexer, token::Type::kNumber, 42.);
 }
 
 TEST(Lexer, NumberWithDecimal) {
   const auto input = new std::istringstream{"42.1337"};
   auto lexer = lexer::Lexer{input};
 
-  auto next_tok = static_cast<token::Number*>(lexer.GetNextToken());
-
-  EXPECT_EQ(next_tok->type, token::Type::kNumber);
-  EXPECT_EQ(next_tok->value, 42.1337);
+  check_token<token::Number*, double>(&lexer, token::Type::kNumber, 42.1337);
 }
 
 TEST(Lexer, SimpleExpr) {
@@ -53,22 +48,9 @@ TEST(Lexer, SimpleExpr) {
 
   auto lexer = lexer::Lexer{input};
 
-  auto tok1 = lexer.GetNextToken();
-  EXPECT_EQ(tok1->type, token::Type::kDef);
-
-  auto tok2 = static_cast<token::Identifier*>(lexer.GetNextToken());
-  EXPECT_EQ(tok2->type, token::Type::kIdentifier);
-  EXPECT_EQ(tok2->value, "f");
-
-  auto tok3 = lexer.GetNextToken();
-  assert(tok3 != nullptr);
-  EXPECT_EQ(tok3->type, token::Type::kLParen);
-
-  auto tok4 = static_cast<token::Identifier*>(lexer.GetNextToken());
-  EXPECT_EQ(tok4->type, token::Type::kIdentifier);
-  EXPECT_EQ(tok4->value, "a");
-
-  auto tok5 = lexer.GetNextToken();
-  assert(tok5 != nullptr);
-  EXPECT_EQ(tok5->type, token::Type::kRParen);
+  EXPECT_EQ(lexer.GetNextToken()->type, token::Type::kDef);
+  check_token<token::Identifier*, std::string>(&lexer, token::Type::kIdentifier, "f");
+  EXPECT_EQ(lexer.GetNextToken()->type, token::Type::kLParen);
+  check_token<token::Identifier*, std::string>(&lexer, token::Type::kIdentifier, "a");
+  EXPECT_EQ(lexer.GetNextToken()->type, token::Type::kRParen);
 }
