@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+
+	<title>I/ First Steps - Kaleidoscope++: LLVM Tutorial Reloaded</title>
+
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/base.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="..">Kaleidoscope++: LLVM Tutorial Reloaded</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="..">Home</a>
+                </li>
+            
+            
+            
+                <li class="active">
+                    <a href="./">I/ First Steps</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../about/">About</a>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                
+                <li >
+                    <a rel="next" href="..">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../about/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#a-small-subset-of-the-language">A small subset of the language</a></li>
+        
+            <li><a href="#function-definition">Function Definition</a></li>
+        
+            <li><a href="#frontend">Frontend</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="a-small-subset-of-the-language">A small subset of the language</h1>
+<h2 id="function-definition">Function Definition</h2>
+<p>In this chapter we will focus on a small part of the language. Our goal is to
+be able to define and call functions.</p>
+<p>A function is defined by its:</p>
+<ul>
+<li>Prototype that contains the name of the function and its arguments.</li>
+<li>Body that describes the computation that will be applied to its arguments
+  when  the function will be called.</li>
+</ul>
+<p>For example, we define a <code>add</code> function there:</p>
+<pre><code class="python">def add(a, b)
+    a + b
+</code></pre>
+
+<p>Once a function is defined, one can call it by using its name and replacing the
+name of arguments by values:</p>
+<pre><code class="python">add(1, 2)
+</code></pre>
+
+<p>Why do we need the <code>def</code> keyword? It is a way to make it easier to distinguish
+the definition and the calling of a function. It helps the parsing steps and
+avoid to look ahead to make decision of what the expression is. Let's do a
+thought experiment and imagine we don't use the <code>def</code> keyword. Now we define
+the function with:</p>
+<pre><code class="python">add(a, b)
+    a + b
+</code></pre>
+
+<p>The first token is <code>add</code>, we call it an <em>identifier</em>. The next one is <code>(</code>. This
+is exactly the same as the calling of a function <code>add(1, 2)</code>. If we compare
+both we have:</p>
+<ul>
+<li>Definition: <code>identifier ( identifier , identifier)</code></li>
+<li>Call: <code>identifier ( number , number)</code></li>
+</ul>
+<p>So we need to look ahead two tokens to know if we parse a definition or a call.
+It would be even worse if the language supported variables! The parser would
+encounter situations such as the <em>call</em> is also <code>identifier ( identifier ,
+identifier )</code>. It would then be forced to get tokens after the <code>)</code>. Using the
+<code>def</code> keyword removes any ambiguity from the start of the definition.</p>
+<p>One more thing, the indentation is only here for readability. It is not part of
+the body format. We could write:</p>
+<pre><code class="python">add(a, b) a + b
+</code></pre>
+
+<h2 id="frontend">Frontend</h2>
+<p>Ok, so now how can we parse that?</p>
+<p>The frontend relies on two components: the <em>lexer</em> and the <em>parser</em>. The
+<em>lexer</em> reads the raw text of the source code and converts it to a sequence of
+tokens.  A token identifies the type of an expression, it has a <em>type</em> and a
+<em>value</em>. For example we said earlier that <code>add</code> is an identifier. So its type
+is <code>identifier</code> and its value is <code>add</code>. The <em>parser</em> reads the sequence of
+tokens and matches grammar rules. A grammar describes the structure of the
+language. In other word it explains the set of valid token sequences.</p>
+<h3 id="lexer">Lexer</h3>
+<p>The first step is to implement the lexer. We don't need to keep the value for
+all tokens. </p>
+<p>At this stage, we want to support the following token:</p>
+<ul>
+<li>end-of-file EOF</li>
+<li><code>def</code></li>
+<li><code>identifier</code> with a string value (for example <code>add</code>).</li>
+<li><code>number</code> with a <code>double</code> value (for example <code>1.234</code>).</li>
+</ul>
+<p>The original LLVM tutorial used two global variables:</p>
+<ul>
+<li>One to store the value of an <em>identifier</em> as a <code>string</code>: <code>static std::string IdentifierStr; // Filled in if tok_identifier</code>.</li>
+<li>Another to store the value of a <em>number</em> as a <code>double</code>: <code>static double NumVal; // Filled in if tok_number</code>.</li>
+</ul>
+<p>What's wrong with that?</p>
+<p>We cannot parse two tokens at the same time (in different threads or
+coroutines) but should it really happen? Parallel compilation usually relies on
+separate processes.</p>
+<p>There is a performance issue related to global variable that would not be often
+in the cache. They are declared <em>static</em> so they are stored in the <code>.bss
+uninitialized</code> section while most of the time the stack is hot. However at this
+stage, performance is not a concern.</p>
+<p>In our context, the main concern is <em>locality</em> and its consequence on
+understanding how and when a variable is used. Hence a global variable makes it
+harder to reason about what piece of code is using it and when. It also makes
+it more difficult to write tests. See also
+<a href="http://c2.com/cgi/wiki?GlobalVariablesAreBad">GlobalVariablesAreBad</a> and <a href="http://stackoverflow.com/a/485020">Are
+global variables bad?</a>.</p>
+<p>Another simple way to handle that is to define a struct:</p>
+<pre><code class="c++">namespace token {
+//...
+enum struct Type {  // enum struct is C++11.
+  kEof        = -1,
+  kDef        = -2,
+  kIdentifier = -3,
+  kNumber     = -4, // Trailing comma authorized in C++11.
+};
+//...
+}
+</code></pre>
+
+<p>Note: an <em>enum struct</em> (or an <em>enum class</em>) is a <em>scoped enumeration</em>. It
+allows to access its values with their enum prefix (here <code>TokenType::</code>) also
+called *scope resolution operator. See also
+<a href="http://en.cppreference.com/w/cpp/language/enum">enum</a>. There is no collision between
+two scoped enumerations. For example we can have a <code>Enum1::A</code> and <code>Enum2::A</code>.
+There are no implicit conversions from the values of a scoped enumerator to
+integral types, although <code>static_cast may</code> be used to obtain the numeric value
+of the enumerator. It means you can convert <code>TokenType</code> to an integer with
+<code>static_cast&lt;int&gt;(type)</code>, for example:</p>
+<pre><code class="c++">cout &lt;&lt; static_cast&lt;int&gt;token::Type::kIdentifier &lt;&lt; endl;
+</code></pre>
+
+<p>will print:</p>
+<pre><code>-3
+</code></pre>
+
+<pre><code class="cpp">struct Token {
+  Type type;
+  Value value;
+};
+</code></pre>
+
+<p>There are several issues there:</p>
+<ul>
+<li><em>type</em> and <em>value</em> can mismatch, for example having an <em>identifier</em> with an
+  integer value. It would be a bug in the lexer though.</li>
+<li><code>TokenValue</code> has several subtypes like <code>double</code> and <code>string</code>.</li>
+</ul>
+<p>To solve the problem of mismatch between <em>type</em> and <em>value</em>, we can rely on a
+type hierarchy:</p>
+<pre><code class="cpp">struct Token {
+  Type type;
+};
+
+struct Identifier: public Token {
+  //...
+};
+
+struct Number: public Token {
+  //...
+};
+</code></pre>
+
+<p>To solve the problem of <code>token::Value</code> having several types, we could use
+<a href="http://www.boost.org/libs/variant">Boost.Variant</a>. These also <a href="http://theboostcpplibraries.com/boost.variant"><em>The Boost C++
+libraries, Chapter 24.
+Boost.Variant</em></a>:</p>
+<pre><code class="c++">#include &lt;boost/variant.hpp&gt;
+
+//...
+
+typedef boost::variant&lt;char, string, double&gt; TokenValue;
+</code></pre>
+
+<p>Then, the following code:</p>
+<pre><code class="c++">  auto tok = token::Identifier(&quot;def&quot;);
+  cout &lt;&lt; tok.value &lt;&lt; endl;
+  cout &lt;&lt; static_cast&lt;int&gt;(tok.type) &lt;&lt; endl;
+</code></pre>
+
+<p>prints:</p>
+<pre><code>def
+-3
+</code></pre>
+
+<p>Note: there is something wrong with <code>Token tok = Identifier("def")</code> where
+<code>tok.value</code> is empty (I assume it is initialized by default to the empty string
+by the compiler). <a href="https://en.wikipedia.org/wiki/Object_slicing">Object Slicing</a>?</p>
+<p>What will happen when we will need to inspect the type of <code>Token</code> instance?
+There is a problem. The class and its <code>type</code> attribute are redundant. The class
+hierarchy does not represent the fact that some tokens are identified
+<em>dynamically</em>. This is why the token types are negative. It's to automatically
+take into account characters integer value. It means the scanning step cannot
+go through basic sanity checks. The lexer allows invalid tokens. To make it
+stricter we define all valid tokens:</p>
+<pre><code class="c++">enum struct Type {
+  kEof,
+  kDef,
+  kIdentifier,
+  kNumber,
+  kLParen,
+  kRParen, // Trailing comma authorized in C++11.
+};
+
+struct Token {
+  Type type;
+}
+</code></pre>
+
+<p>How does it compare to a simple integer? With a naive approach we will allocate
+one new object for each token even simple one such as <code>(</code> or <code>)</code>. An integer
+has the advantage of being a native value, it does not require any allocation.</p>
+<p>Why not using Boost.Variant again? And define:</p>
+<pre><code class="c++">typedef boost::variant&lt;int, TokenWithValue&gt; Token;
+</code></pre>
+
+<p>It brings the best of both world:</p>
+<ul>
+<li>Native value for tokens that can be represent only with their ordinal value</li>
+<li>Type and value in a class for tokens that has a value. Some have a static
+  alue (<code>"def"</code>) other have a dynamic value (for example a function <code>f</code> is an
+  identifier with value <code>f</code>).</li>
+</ul>
+<p>A visitor will help to define a strategy to get the value.</p>
+<p>However Boost.variant brings its set of limitations and hides some magic. <a href="http://c2.com/cgi/wiki?KillYourDarlings">Kill
+your darlings</a> because in the end they
+may bring more limitations than features!</p>
+<p>Using a class hierarchy is more straightforward and usual:</p>
+<pre><code class="c++">enum struct Type {
+  kEof,
+  kDef,
+  kIdentifier,
+  kNumber,
+  kLParen,
+  kRParen, // Trailing comma authorized in C++11.
+};
+
+struct Token {
+  Type type;
+
+  Token(Type type): type{type} {};
+};
+
+struct Identifier: Token {
+  static const Type type; // = Type::kIdentifier
+  std::string value;
+
+  Identifier(std::string value): Token{type}, value{value} {};
+};
+
+struct Number: Token {
+  static const Type type; // = Type::kNumber;
+  double value;
+
+  Number(double value): Token{type}, value{value} {};
+};
+</code></pre>
+
+<p>And in <code>src/lexer.cpp</code>:</p>
+<pre><code class="c++">namespace token {
+  const Type Identifier::type = Type::kIdentifier;
+  const Type Number::type = Type::kNumber;
+}
+</code></pre>
+
+<p>The interesting part is to provide information locality. A token describes
+itself. However there is still an issue with the <code>enum struct</code>. If it was a
+simple integer <code>enum</code> or an <code>integer</code> <code>token::Type</code> could have been defined
+inline the <code>Identifier</code> and <code>Number</code> subclasses (Stroustrup, 4th, 17.4.5):
+"<em>for a few simple special cases, it is possible to initialize a static member
+in the class de- claration. The static member must be a const of an integral or
+enumeration type, or a constexpr of a literal type (§10.4.3), and the
+initializer must be a constant-expression.</em>"</p>
+<p>As it is an <code>enum struct</code> is required <em>special storage</em> and must be initialized
+once outside the class definition (Stroustrup, 4th, 17.4.5): "<em>If (and only if)
+you use an initialized member in a way that requires it to be stored as an
+object in memory, the member must be (uniquely) defined somewhere. The
+initializer may not be repeated</em>".</p>
+<p>Now it works. The only issue is that the value is not in the class definition
+which decreases information locality but is acceptable as the value is obvious
+(though we added a comment to make it explicit) and should not change.</p>
+<p>The original LLVM tutorial uses a function to get the next token from the
+input. It assumes that the input comes from <em>stdin</em> hence using the <code>getchar()</code>
+function from <code>cstdio</code> and that values are stored in global variables when
+needed. This design would be hard to evolve when we will want to support some
+error handling. Don't you like the error reporting expressiveness and accuracy
+of clang? ;)</p>
+<pre><code class="c++">#include &lt;iostream&gt;
+
+class Lexer {
+  std::istream* input_;
+  int last_char_;
+
+  public:
+    Lexer(std::istream* input):
+      input_{input},
+      last_char_{static_cast&lt;int&gt;(' ')} {
+    }
+    void SkipSpaces();
+    char GetChar();
+    token::Token* GetNextToken();
+};
+</code></pre>
+
+<p>Here the private attributes encapsulate the state and we can evolve the class
+without disturbing its users. We can define what we expect in tests. The lexer
+is very simple that's why there is no issue implementing it in functions rather
+than defining regular expressions. However regular would be more expressive
+(they would still be quite simple). Let's start with a simple version and see
+if we want to refactor it.</p></div>
+        </div>
+
+        
+
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script src="../js/base.js"></script>
+    </body>
+</html>
