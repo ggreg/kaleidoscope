@@ -1,3 +1,5 @@
+![Build Status](https://travis-ci.org/ggreg/kaleidoscope.svg)
+
 # README for Kaleidoscope++
 
 ## Introduction
