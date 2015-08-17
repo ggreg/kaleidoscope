@@ -6,7 +6,10 @@
             'src',
         ],
         'sources': [
+            'src/lexer.hpp',
             'src/lexer.cpp',
+	    'src/syntax.hpp',
+	    'src/syntax.cpp',
         ],
         'cflags': [
             '-std=c++11',
@@ -58,6 +61,7 @@
         'sources': [
             'tests/test_main.cc',
             'tests/test_lexer.cpp',
+	    'tests/test_syntax.cpp',
         ]
     }]
 }

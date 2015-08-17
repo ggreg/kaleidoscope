@@ -40,10 +40,12 @@ token::Token* Lexer::GetNextToken() {
       }
 
       if (value == "def") {
-        return new token::Token{token::Type::kDef};
+        token_ = new token::Token{token::Type::kDef};
+        return token_;
       }
 
-      return new token::Identifier{value};
+      token_ = new token::Identifier{value};
+      return token_;
   }
   if (isdigit(last_char_)) {
     std::string number_str;
@@ -60,15 +62,19 @@ token::Token* Lexer::GetNextToken() {
       }
     }
 
-    return new token::Number{strtod(number_str.c_str(), 0)};
+    token_ = new token::Number{strtod(number_str.c_str(), 0)};
+    return token_;
   }
   if (last_char_ == '(') {
     GetChar();
-    return new token::Token(token::Type::kLParen);
+
+    token_ = new token::Token(token::Type::kLParen);
+    return token_;
   }
   if (last_char_ == ')') {
     GetChar();
-    return new token::Token(token::Type::kRParen);
+    token_ = new token::Token(token::Type::kRParen);
+    return token_;
   }
 
   return nullptr;

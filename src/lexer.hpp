@@ -11,6 +11,7 @@ enum struct Type {
   kIdentifier,
   kNumber,
   kLParen,
+  kComma,
   kRParen, // Trailing comma authorized in C++11.
 };
 
@@ -39,10 +40,7 @@ struct Number: Token {
 namespace lexer {
 
 class Lexer {
-  std::istream* input_;
-  int last_char_;
-
-  public:
+public:
     Lexer(std::istream* input):
       input_{input},
       last_char_{static_cast<int>(' ')} {
@@ -50,6 +48,12 @@ class Lexer {
     void SkipSpaces();
     char GetChar();
     token::Token* GetNextToken();
+    token::Token* CurrentToken() { return token_; };
+
+private:
+  std::istream* input_;
+  int last_char_;
+  token::Token* token_;
 };
 
 }
